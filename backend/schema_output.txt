@@ -1,0 +1,8 @@
+Assignment_ID: int
+Employee_ID: varchar(20)
+Job_ID: int
+Contract_ID: int
+Start_Date: date
+End_Date: date
+Status: varchar(20)
+Assigned_Salary: decimal(10,2)
