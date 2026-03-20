@@ -193,28 +193,28 @@ Open MySQL Workbench or any MySQL client and run the SQL files **in this order**
 
 ```sql
 -- 1. Create schema and all 23 tables
-SOURCE "HRMS Tables creation.sql";
+SOURCE "database/HRMS Tables creation.sql";
 
 -- 2. Load initial data
-SOURCE "Insertions for HRMS.sql";
+SOURCE "database/Insertions for HRMS.sql";
 
 -- 3. Load additional sample data
-SOURCE "Additional Insertions for HRMS.sql";
+SOURCE "database/Additional Insertions for HRMS.sql";
 
 -- 4. Create triggers (automation + validation)
-SOURCE "HRMS Triggers.sql";
+SOURCE "database/HRMS Triggers.sql";
 
 -- 5. Create functions (calculations + metrics)
-SOURCE "HRMS Functions.sql";
+SOURCE "database/HRMS Functions.sql";
 
 -- 6. Create stored procedures (complex operations)
-SOURCE "HRMS Procedures.sql";
+SOURCE "database/HRMS Procedures.sql";
 
 -- 7. Create views (reporting + dashboards)
-SOURCE "HRMS Views.sql";
+SOURCE "database/HRMS Views.sql";
 
 -- 8. Create master views (Power BI analytics)
-SOURCE "CREATE_MASTER_VIEWS.sql";
+SOURCE "database/CREATE_MASTER_VIEWS.sql";
 ```
 
 > **Note**: Run these from the HRMS_Project database:
@@ -285,25 +285,26 @@ Open `http://localhost:3000` in your browser. The Dashboard should show live emp
 ```
 Enterprise-HRMS-Analytics/
 │
-├── 📂 hrms-web-app/            # Full-stack web application
-│   ├── backend/                # Node.js + Express API
-│   │   ├── server.js
-│   │   ├── config/database.js
-│   │   ├── routes/             # 5 route modules
-│   │   ├── controllers/        # 5 controller modules
-│   │   └── .env.example
-│   └── frontend/               # React SPA
-│       └── src/
-│           ├── pages/          # 6 page components
-│           ├── components/     # Reusable UI
-│           └── services/api.js # Axios HTTP client
+├── 📂 database/                # All SQL scripts (run in order)
+│   ├── HRMS Tables creation.sql
+│   ├── Insertions for HRMS.sql
+│   ├── Additional Insertions for HRMS.sql
+│   ├── HRMS Triggers.sql
+│   ├── HRMS Functions.sql
+│   ├── HRMS Procedures.sql
+│   ├── HRMS Views.sql
+│   └── CREATE_MASTER_VIEWS.sql
 │
-├── 📄 HRMS Tables creation.sql
-├── 📄 Insertions for HRMS.sql
-├── 📄 Additional Insertions for HRMS.sql
-├── 📄 HRMS Triggers.sql
-├── 📄 HRMS Functions.sql
-├── 📄 HRMS Procedures.sql
-├── 📄 HRMS Views.sql
-└── 📄 CREATE_MASTER_VIEWS.sql
+├── 📂 backend/                 # Node.js + Express API
+│   ├── server.js
+│   ├── config/database.js
+│   ├── routes/                 # 5 route modules
+│   ├── controllers/            # 5 controller modules
+│   └── .env.example
+│
+└── 📂 frontend/                # React SPA
+    └── src/
+        ├── pages/              # 6 page components
+        ├── components/         # Reusable UI
+        └── services/api.js     # Axios HTTP client
 ```
