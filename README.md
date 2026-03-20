@@ -1,251 +1,309 @@
-# 🏢 Enterprise HRMS Analytics
+# Enterprise HR Management System (HRMS)
 
-A full-stack **Human Resource Management System (HRMS)** web application built with **React** and **Node.js/Express**, backed by a **MySQL** database. The system provides a centralized portal for managing employees, departments, job positions, training programs, performance reviews, and job assignments.
+> A full-stack Human Resource Management System built on a rigorous relational database architecture. The system manages employee records, job assignments, performance appraisals, and training programs — with a Node.js web interface and Power BI executive dashboards.
 
 ---
 
 ## 📋 Table of Contents
-
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Prerequisites](#-prerequisites)
-- [Getting Started](#-getting-started)
-- [API Endpoints](#-api-endpoints)
-- [Screenshots](#-screenshots)
-- [License](#-license)
-
----
-
-## ✨ Features
-
-| Module | Capabilities |
-|---|---|
-| **Dashboard** | Real-time overview with total employees, departments, jobs, training programs, quick stats (active, probation, on leave), and quick action shortcuts. |
-| **Employee Management** | View all employees, add new employees, update information, delete records, and view employee statistics. |
-| **Department Management** | Browse and manage organizational departments. |
-| **Job Positions** | View and manage available job positions within the organization. |
-| **Job Assignments** | Assign employees to job positions, update assignments, and track current placements. |
-| **Training Programs** | View training programs and track employee training enrollment and progress. |
-| **Performance Reviews** | Manage performance appraisals and track KPI scores. |
-| **Theme Switching** | Toggle between Light and Dark modes with persistent preference via `localStorage`. |
+1. [Project Overview](#project-overview)
+2. [Tech Stack](#tech-stack)
+3. [Database Schema](#database-schema)
+4. [Database Objects](#database-objects)
+5. [Web Application](#web-application)
+6. [Setup & Running the Project](#setup--running-the-project)
+7. [SQL Files Reference](#sql-files-reference)
+8. [Project Structure](#project-structure)
 
 ---
 
-## 🛠 Tech Stack
+## Project Overview
 
-### Frontend
-| Technology | Purpose |
-|---|---|
-| **React 18** | UI library |
-| **React Router v6** | Client-side routing |
-| **React Icons** | Icon library |
-| **Axios** | HTTP client |
-| **Vanilla CSS** | Styling with CSS variables for theming |
+The HRMS manages the full HR lifecycle for a university environment:
 
-### Backend
-| Technology | Purpose |
-|---|---|
-| **Node.js** | JavaScript runtime |
-| **Express.js** | Web framework |
-| **MySQL2** | Database driver (connection pooling) |
-| **dotenv** | Environment variable management |
-| **CORS** | Cross-origin resource sharing |
-| **body-parser** | Request body parsing |
-| **nodemon** | Development auto-restart |
+| Module | Description |
+|--------|-------------|
+| **Employee Management** | Profiles, disabilities, qualifications, insurance |
+| **Organizational Structure** | Universities → Faculties → Departments → Jobs |
+| **Job Assignments** | Assign employees to jobs with contracts |
+| **Performance Management** | KPI-based appraisals, scoring, appeals |
+| **Training & Development** | Programs, enrollments, certificates |
 
-### Database
-| Technology | Purpose |
-|---|---|
-| **MySQL** | Relational database (HRMS_Project schema) |
+**Database Stats**: 23 tables · 6 triggers · 15 functions · 18 stored procedures · 12 views · 356+ sample records
 
 ---
 
-## 📁 Project Structure
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Database** | MySQL 8.0+ |
+| **Backend API** | Node.js 18+ · Express.js 4 |
+| **Frontend** | React 18 · React Router · Axios |
+| **Analytics** | Power BI Desktop (ODBC connection) |
+
+---
+
+## Database Schema
+
+### Table Hierarchy (load order)
+
+The schema uses a **level-based design** to prevent circular foreign key dependencies:
 
 ```
-hrms-web-app/
-├── backend/
-│   ├── config/
-│   │   └── database.js          # MySQL connection pool configuration
-│   ├── controllers/
-│   │   ├── assignmentController.js
-│   │   ├── departmentController.js
-│   │   ├── employeeController.js
-│   │   ├── jobController.js
-│   │   ├── performanceController.js
-│   │   └── trainingController.js
-│   ├── routes/
-│   │   ├── assignmentRoutes.js
-│   │   ├── departmentRoutes.js
-│   │   ├── employeeRoutes.js
-│   │   ├── jobRoutes.js
-│   │   ├── performanceRoutes.js
-│   │   └── trainingRoutes.js
-│   ├── .env.example             # Environment variables template
-│   ├── package.json
-│   └── server.js                # Express app entry point
-│
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Sidebar.js       # Navigation sidebar with theme toggle
-│   │   │   └── Sidebar.css
-│   │   ├── pages/
-│   │   │   ├── Dashboard.js     # Overview & quick stats
-│   │   │   ├── Employees.js     # Employee CRUD
-│   │   │   ├── Departments.js   # Department listing
-│   │   │   ├── Jobs.js          # Job positions
-│   │   │   ├── JobAssignments.js# Assign employees to jobs
-│   │   │   ├── Training.js      # Training programs & enrollment
-│   │   │   └── Performance.js   # Appraisals & KPI scores
-│   │   ├── services/
-│   │   │   └── api.js           # API service layer (fetch-based)
-│   │   ├── App.js               # Root component with routing & theme context
-│   │   ├── index.js             # React entry point
-│   │   └── index.css            # Global styles (light/dark themes)
-│   └── package.json
-│
-└── README.md
+Level 0 (Independent):   UNIVERSITY, DEPARTMENT, EMPLOYEE, CONTRACT,
+                          PERFORMANCE_CYCLE, TRAINING_PROGRAM
+
+Level 1 (→ Level 0):     FACULTY, JOB, EMPLOYEE_DISABILITY,
+                          SOCIAL_INSURANCE, EDUCATIONAL_QUALIFICATION,
+                          PROFESSIONAL_CERTIFICATE
+
+Level 2 (→ Level 1):     ACADEMIC_DEPARTMENT, ADMINISTRATIVE_DEPARTMENT,
+                          JOB_OBJECTIVE
+
+Level 3 (→ Level 2):     OBJECTIVE_KPI, JOB_ASSIGNMENT, EMPLOYEE_TRAINING
+
+Level 4 (→ Level 3):     EMPLOYEE_KPI_SCORE, APPRAISAL
+
+Level 5 (→ Level 4):     APPEAL, TRAINING_CERTIFICATE
+```
+
+### Key Relationships
+
+```
+UNIVERSITY (1) ──> (N) FACULTY (1) ──> (N) ACADEMIC_DEPARTMENT
+UNIVERSITY (1) ──> (N) ADMINISTRATIVE_DEPARTMENT
+
+EMPLOYEE (1) ──> (N) JOB_ASSIGNMENT (N) <── (1) JOB
+JOB (1) ──> (N) JOB_OBJECTIVE (1) ──> (N) OBJECTIVE_KPI
+
+JOB_ASSIGNMENT (1) ──> (N) APPRAISAL
+APPRAISAL    (1) ──> (0/1) APPEAL
+
+EMPLOYEE (1) ──> (N) EMPLOYEE_TRAINING (N) <── (1) TRAINING_PROGRAM
+EMPLOYEE_TRAINING (1) ──> (0/1) TRAINING_CERTIFICATE
 ```
 
 ---
 
-## 📌 Prerequisites
+## Database Objects
 
-Before you begin, ensure you have the following installed:
+### Triggers (6)
 
-- **Node.js** (v16 or higher) — [Download](https://nodejs.org/)
-- **npm** (comes with Node.js)
-- **MySQL Server** (v8.0+) — [Download](https://dev.mysql.com/downloads/)
-- **Git** — [Download](https://git-scm.com/)
+| Trigger | Event | Purpose |
+|---------|-------|---------|
+| `trg_validate_obj_weight` | BEFORE INSERT on JOB_OBJECTIVE | Prevents objective weights exceeding 100% |
+| `trg_prevent_obj_delete` | BEFORE DELETE on JOB_OBJECTIVE | Blocks deletion if KPIs exist |
+| `trg_prevent_emp_delete` | BEFORE DELETE on EMPLOYEE | Blocks deletion if active assignments exist |
+| `trg_calc_weighted_score` | BEFORE INSERT on EMPLOYEE_KPI_SCORE | Auto-calculates `(Score × Weight) / 100` |
+| `trg_prevent_prog_delete` | BEFORE DELETE on TRAINING_PROGRAM | Blocks deletion if employees are enrolled |
+| `trg_validate_cert` | BEFORE INSERT on TRAINING_CERTIFICATE | Ensures training is completed before issuing cert |
+
+### Functions (15)
+
+| Category | Functions |
+|----------|-----------|
+| **Employee Info** | `GetEmployeeFullName`, `CalculateAge`, `CalculateServiceYears` |
+| **Performance** | `CalculateKPIScore`, `CalculateWeightedScore`, `GetTotalJobWeight`, `GetCycleDuration` |
+| **Dashboard Metrics** | `GetTotalEmployees`, `GetActiveEmployees`, `GetTotalJobs`, `GetActiveJobs`, `GetTotalTrainingPrograms`, `GetTotalCertificates`, `GetKPICompletionRate`, `GetAvgAppraisalScore` |
+
+### Stored Procedures (18)
+
+| Category | Procedures |
+|----------|-----------|
+| **Employee** | `AddNewEmployee`, `UpdateEmployeeContactInfo`, `AddEmployeeDisability`, `GetEmployeeFullProfile` |
+| **Job & Assignment** | `AddNewJob`, `AddJobObjective`, `AssignJobToEmployee` |
+| **Performance** | `CreatePerformanceCycle`, `AddEmployeeKPIScore`, `CalculateEmployeeWeightedScore`, `SubmitAppeal` |
+| **Training** | `AddTrainingProgram`, `AssignTrainingToEmployee`, `RecordTrainingCompletion`, `IssueTrainingCertificate` |
+
+### Views (12)
+
+| View | Purpose |
+|------|---------|
+| `vw_EmployeeCountByDept` | Headcount per department |
+| `vw_GenderDistribution` | Gender breakdown with % |
+| `vw_EmploymentStatusDist` | Active/Leave/Retired breakdown |
+| `vw_JobsByLevel` | Jobs grouped by level |
+| `vw_SalaryStatsByCategory` | Min/Max/Avg salary per category |
+| `vw_ActiveJobAssignments` | All current employee-job mappings |
+| `vw_KPIScoresSummary` | KPI scores with employee and cycle info |
+| `vw_AppraisalsPerCycle` | Average scores per performance cycle |
+| `vw_FullAppraisalSummary` | Complete appraisal details |
+| `vw_TrainingParticipation` | Enrollment count per program |
+| `vw_TrainingCompletionStats` | Completion/In-Progress stats |
+| `vw_OrgHierarchy` | University → Faculty → Dept headcount |
 
 ---
 
-## 🚀 Getting Started
+## Web Application
 
-### 1. Clone the Repository
+### Architecture
+
+```
+Browser (http://localhost:3000)
+    │
+    ▼ HTTP REST API
+React Frontend (Port 3000)
+    │
+    ▼ JSON
+Express Backend (Port 5000)
+    │
+    ▼ SQL
+MySQL Database (HRMS_Project)
+```
+
+### Pages (6)
+
+| Route | Page | Features |
+|-------|------|---------|
+| `/` | Dashboard | Summary cards, stats (uses DB functions) |
+| `/employees` | Employees | Full CRUD · search · profile view |
+| `/departments` | Departments | CRUD · Academic/Admin type badges |
+| `/jobs` | Jobs | CRUD · salary ranges · job hierarchy |
+| `/performance` | Performance | Appraisals · KPI scores · appeals |
+| `/training` | Training | Programs · enrollments · certificates |
+
+### REST API Endpoints (25+)
+
+```
+GET/POST/PUT/DELETE  /api/employees
+GET/POST/PUT/DELETE  /api/departments
+GET/POST/PUT/DELETE  /api/jobs
+GET                  /api/performance/appraisals
+GET                  /api/performance/cycles
+GET                  /api/performance/appeals
+GET/POST             /api/training/programs
+GET/POST/PUT         /api/training/enrollments
+```
+
+---
+
+## Setup & Running the Project
+
+### Prerequisites
+
+```
+✅ MySQL 8.0+
+✅ Node.js 18+
+✅ npm
+```
+
+### Step 1 — Set Up the Database
+
+Open MySQL Workbench or any MySQL client and run the SQL files **in this order**:
+
+```sql
+-- 1. Create schema and all 23 tables
+SOURCE "HRMS Tables creation.sql";
+
+-- 2. Load initial data
+SOURCE "Insertions for HRMS.sql";
+
+-- 3. Load additional sample data
+SOURCE "Additional Insertions for HRMS.sql";
+
+-- 4. Create triggers (automation + validation)
+SOURCE "HRMS Triggers.sql";
+
+-- 5. Create functions (calculations + metrics)
+SOURCE "HRMS Functions.sql";
+
+-- 6. Create stored procedures (complex operations)
+SOURCE "HRMS Procedures.sql";
+
+-- 7. Create views (reporting + dashboards)
+SOURCE "HRMS Views.sql";
+
+-- 8. Create master views (Power BI analytics)
+SOURCE "CREATE_MASTER_VIEWS.sql";
+```
+
+> **Note**: Run these from the HRMS_Project database:
+> ```sql
+> CREATE DATABASE IF NOT EXISTS HRMS_Project;
+> USE HRMS_Project;
+> ```
+
+### Step 2 — Configure the Backend
 
 ```bash
-git clone https://github.com/Moazabdelaleem/Enterprise-HRMS-Analytics.git
-cd Enterprise-HRMS-Analytics
+cd hrms-web-app/backend
 ```
 
-### 2. Set Up the Database
-
-1. Start your MySQL server.
-2. Create the `HRMS_Project` database and run the schema/seed scripts to populate the required tables (employees, departments, jobs, training programs, performance data, etc.).
-
-### 3. Configure the Backend
-
-```bash
-cd backend
-cp .env.example .env
-```
-
-Edit the `.env` file with your MySQL credentials:
+Create a `.env` file:
 
 ```env
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_password_here
+DB_PASSWORD=your_mysql_password
 DB_NAME=HRMS_Project
 PORT=5000
 ```
 
-### 4. Install Dependencies
+### Step 3 — Start the Backend
 
-**Backend:**
 ```bash
-cd backend
+cd hrms-web-app/backend
 npm install
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm install
-```
-
-### 5. Run the Application
-
-**Start the backend server:**
-```bash
-cd backend
-npm run dev
-```
-The API will be available at `http://localhost:5000/api`
-
-**Start the frontend (in a separate terminal):**
-```bash
-cd frontend
 npm start
 ```
-The app will open at `http://localhost:3000`
+
+Backend runs at: `http://localhost:5000`
+
+### Step 4 — Start the Frontend
+
+```bash
+cd hrms-web-app/frontend
+npm install
+npm start
+```
+
+Frontend runs at: `http://localhost:3000`
+
+### Step 5 — Verify
+
+Open `http://localhost:3000` in your browser. The Dashboard should show live employee and job counts pulled directly from the database.
 
 ---
 
-## 📡 API Endpoints
+## SQL Files Reference
 
-### Health Check
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/health` | Server health check |
-
-### Employees
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/employees` | Get all employees |
-| `GET` | `/api/employees/stats` | Get employee statistics |
-| `GET` | `/api/employees/:id` | Get employee by ID |
-| `POST` | `/api/employees` | Create a new employee |
-| `PUT` | `/api/employees/:id` | Update an employee |
-| `DELETE` | `/api/employees/:id` | Delete an employee |
-
-### Departments
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/departments` | Get all departments |
-
-### Jobs
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/jobs` | Get all job positions |
-
-### Assignments
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/assignments` | Get all job assignments |
-| `POST` | `/api/assignments` | Create a new assignment |
-| `PUT` | `/api/assignments/:id` | Update an assignment |
-
-### Training
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/training/programs` | Get all training programs |
-| `GET` | `/api/training/employee-training` | Get employee training records |
-
-### Performance
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/performance/appraisals` | Get all appraisals |
-| `GET` | `/api/performance/kpi-scores` | Get KPI scores |
+| File | Contents | Run Order |
+|------|----------|-----------|
+| `HRMS Tables creation.sql` | 23 table definitions · CHECK constraints · FK constraints | 1st |
+| `Insertions for HRMS.sql` | Core seed data (~150 records) | 2nd |
+| `Additional Insertions for HRMS.sql` | Extended sample data (~200 records) | 3rd |
+| `HRMS Triggers.sql` | 6 triggers for automation and validation | 4th |
+| `HRMS Functions.sql` | 15 user-defined functions | 5th |
+| `HRMS Procedures.sql` | 18 stored procedures | 6th |
+| `HRMS Views.sql` | 12 reporting views | 7th |
+| `CREATE_MASTER_VIEWS.sql` | Analytics views for Power BI | 8th |
 
 ---
 
-## 🖼 Screenshots
+## Project Structure
 
-> _Screenshots coming soon._
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
----
-
-<p align="center">
-  Built with ❤️ for the GIU Databases Course — 5th Semester
-</p>
+```
+Enterprise-HRMS-Analytics/
+│
+├── 📂 hrms-web-app/            # Full-stack web application
+│   ├── backend/                # Node.js + Express API
+│   │   ├── server.js
+│   │   ├── config/database.js
+│   │   ├── routes/             # 5 route modules
+│   │   ├── controllers/        # 5 controller modules
+│   │   └── .env.example
+│   └── frontend/               # React SPA
+│       └── src/
+│           ├── pages/          # 6 page components
+│           ├── components/     # Reusable UI
+│           └── services/api.js # Axios HTTP client
+│
+├── 📄 HRMS Tables creation.sql
+├── 📄 Insertions for HRMS.sql
+├── 📄 Additional Insertions for HRMS.sql
+├── 📄 HRMS Triggers.sql
+├── 📄 HRMS Functions.sql
+├── 📄 HRMS Procedures.sql
+├── 📄 HRMS Views.sql
+└── 📄 CREATE_MASTER_VIEWS.sql
+```
